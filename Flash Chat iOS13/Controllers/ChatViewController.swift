@@ -48,6 +48,11 @@ class ChatViewController: UIViewController {
                             
                             DispatchQueue.main.async {
                                 self.tableView.reloadData()
+                                
+                                //index path primer parametro
+                                //row: hasta que row scrollear, permitirle al usuario -1 para que no se vaya del arreglo, y section=0 porque en la pantalla hay una sola seccion
+                                let indexPath = IndexPath(row: self.messages.count - 1, section: 0)
+                                self.tableView.scrollToRow(at: indexPath, at: .top, animated: true)
                             }
                             
                         }
@@ -65,8 +70,13 @@ class ChatViewController: UIViewController {
                     print("There was an issue saving data to Firestore, \(e)")
                 } else{
                     print("Successfully saved data.")
+                    DispatchQueue.main.async {
+                        self.messageTextfield.text = ""
+                    }
+                    
                 }
             }
+            
         }
     }
     
@@ -87,10 +97,29 @@ extension ChatViewController: UITableViewDataSource{
         return messages.count
     }
     
+//    metodo que sirve tipo, bueno, para cada celda, llama a esto para saber que llenar en cada una
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 //        se crea una nueva celda con el metodo dequeueReusableCell() con argumentos: el primero, es el identificador que le puse a la celda en el MessageCell.xib (ver atributos, identifier del elemento), y con el casteo del as! casteo la nueva celda a la celda customizada mia: MessageCell
+        let message = messages[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: K.cellIdentifier, for: indexPath) as! MessageCell
-        cell.label.text = messages[indexPath.row].body
+        cell.label.text = message.body
+        
+//        this is a message from the current user
+        if message.sender == Auth.auth().currentUser?.email{
+            cell.leftImageView.isHidden = true
+            cell.rightImageView.isHidden = false
+            cell.messageBubble.backgroundColor = UIColor(named: K.BrandColors.lightPurple)
+            cell.label.textColor = UIColor(named: K.BrandColors.purple)
+        }
+        
+//        this is a message from another sender
+        else{
+            cell.leftImageView.isHidden = false
+            cell.rightImageView.isHidden = true
+            cell.messageBubble.backgroundColor = UIColor(named: K.BrandColors.purple)
+            cell.label.textColor = UIColor(named: K.BrandColors.lightPurple)
+        }
+       
         return cell
     }
 }
